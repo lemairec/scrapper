@@ -29,7 +29,7 @@ def scrappe_leboncoin_appartements():
 
 
 def scrappe_leboncoin_appartement(ville):
-    url = "https://www.leboncoin.fr/recherche/?category=9&region=8&region_near=1&cities="+ville;
+    url = "https://www.leboncoin.fr/recherche/?category=9&locations="+ville;
     scrappe_leboncoin(url, "immobilier", ville)
 
 
