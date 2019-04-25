@@ -38,7 +38,7 @@ def scrappe_leboncoin_appartement(ville):
     url = "https://www.leboncoin.fr/recherche/?category=9&locations="+ville;
     scrappe_leboncoin(url, "immobilier", ville)
 
-def analyse_leboncoin(page, category):
+def analyse_leboncoin2(page, category):
     soup = BeautifulSoup(page, "html.parser")
     divs = soup.find_all("li", {"class": "_3DFQ-"})
     mydatas = []
@@ -80,6 +80,47 @@ def analyse_leboncoin(page, category):
     print len(mydatas)
     saveOrUpdate(mydatas);
 
+def analyse_leboncoin(response, category, remark):
+    pos = response.find("window.__REDIAL_PROPS__ = ") + 26
+    pos2 = response.find("</script>", pos)
+    response = response[pos:pos2]
+    response2 = json.loads(response)
+
+    file = open("log.txt", "w")
+    file.write(response.encode('utf-8'))
+    file.close()
+
+    data = response2[4]["data"]
+    if("ads" in data):
+        data = data["ads"]
+    else:
+        return;
+    #print json.dumps(data)
+
+    mydatas = []
+    for d in data:
+        mydata = {};
+        mydata["type"] = "leboncoin"
+        mydata["category"] = category
+        mydata["title"] = d["subject"]
+        mydata["price"] = 0;
+        if 'price' in d and (len(d["price"]) > 0):
+            mydata["price"] = d["price"][0]
+        mydata["image"] = ""
+        if 'thumb_url' in d["images"]:
+            mydata["image"] = d["images"]["thumb_url"]
+        mydata["url"] = d["url"]
+        mydata["clientId"] = d["url"]
+        mydata["description"] = remark + d["body"];
+        if(category == "immobilier"):
+            if(mydata["title"].find("Terrain") >= 0):
+    			mydata["category"] = "terrain";
+        mydatas.append(mydata)
+
+    #print mydatas;
+    print (json.dumps(mydatas))
+    print len(mydatas)
+    saveOrUpdate(mydatas);
 
 def scrappe_leboncoin(url, category, remark = ""):
     print url
@@ -87,11 +128,10 @@ def scrappe_leboncoin(url, category, remark = ""):
     print "ok"
 
     response = driver.page_source
-
     f = open("leboncoin.html", "w")
     f.write(response.encode('utf-8'))
     f.close()
-    analyse_leboncoin(response, category)
+    analyse_leboncoin(response, category, remark)
 
 
 
@@ -221,7 +261,7 @@ def main():
 
 def main2():
     f = open("leboncoin.html", "r")
-    analyse_leboncoin(f.read());
+    analyse_leboncoin(f.read(), "", "")
     f.close()
 
 
